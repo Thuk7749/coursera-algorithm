@@ -3,14 +3,20 @@ import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
 
 /**
- * RandomWord.java
+ * The {@code RandomWord} class reads a sequence of words from standard input
+ * and prints one of them, chosen uniformly at random.
  * <p>
- * Reads words from standard input and prints one of them at random.
- * The probability of each word being selected is inversely proportional to its position in the input.
- * This implementation uses reservoir sampling to achieve the desired behavior.
- * 
- * 
- * To compile: javac -cp lib/algs4.jar hello-world/RandomWord.java
+ * This implementation uses reservoir sampling to ensure that each word
+ * has an equal probability of being selected, regardless of the total number
+ * of words in the input.
+ * <p>
+ * Usage:
+ * <pre>
+ *   java RandomWord
+ * </pre>
+ * Input: A sequence of words, one per line or separated by whitespace.
+ * Output: A single word, chosen uniformly at random from the input.
+ *
  */
 public class RandomWord {
     public static void main(String[] args) {

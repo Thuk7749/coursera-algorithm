@@ -1,31 +1,24 @@
 /**
- * The {@code HelloGoodbye} class prints personalized greeting and farewell messages.
+ * The HelloGoodbye class prints personalized greeting and farewell messages.
  * <p>
  * It expects two command-line arguments representing names. If arguments are not provided,
- * default names "Anonymous1" and "Anonymous2" are used.
+ * it uses default names "Anonymous1" and "Anonymous2".
  * </p>
- *
  * <p>
- * Example output with arguments "Alice" and "Bob":
+ * Example usage:
  * <pre>
- * Hello Alice and Bob.
- * Goodbye Bob and Alice.
+ *   java HelloGoodbye Alice Bob
+ *   // Output:
+ *   // Hello Alice and Bob.
+ *   // Goodbye Bob and Alice.
  * </pre>
  * </p>
  *
- * <p>
- * Example output with no arguments:
- * <pre>
- * Hello Anonymous1 and Anonymous2.
- * Goodbye Anonymous2 and Anonymous1.
- * </pre>
- * </p>
- *
- * Usage:
- * <pre>
- * java HelloGoodbye Alice Bob
- * </pre>
- *
+ * Arguments:
+ * <ul>
+ *   <li>args[0] - First person's name (default: "Anonymous1")</li>
+ *   <li>args[1] - Second person's name (default: "Anonymous2")</li>
+ * </ul>
  */
 public class HelloGoodbye {
 
