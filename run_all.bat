@@ -10,7 +10,7 @@ echo ====================================
 REM 1. Ask for the folder containing the .java files with validation
 :GET_FOLDER
 set "JAVA_FOLDER="
-set /p JAVA_FOLDER="Enter the folder containing the .java files (default: hello-world):"
+set /p JAVA_FOLDER="Enter the folder containing the .java files (default: hello-world): "
 if "%JAVA_FOLDER%"=="" set "JAVA_FOLDER=hello-world"
 
 REM Sanitize folder path - remove potential dangerous characters
@@ -22,7 +22,7 @@ set "JAVA_FOLDER=%JAVA_FOLDER:<=%"
 
 if "%JAVA_FOLDER%"=="" (
     echo "Error: Folder name cannot be empty."
-    goto GET_FOLDER
+    goto :GET_FOLDER
 )
 
 REM Check if folder exists and is accessible
@@ -30,7 +30,7 @@ if not exist "%JAVA_FOLDER%" (
     echo ====================================
     echo Error: Folder "%JAVA_FOLDER%" does not exist.
     set /p RETRY="Try again? (y/n)": 
-    if /i "!RETRY!"=="y" goto GET_FOLDER
+    if /i "!RETRY!"=="y" goto :GET_FOLDER
     echo Exiting...
     exit /b 1
 )
@@ -42,7 +42,7 @@ if errorlevel 1 (
     set /p RETRY="Try again? (y/n)": 
     if /i "!RETRY!"=="y" (
         popd >nul 2>&1
-        goto GET_FOLDER
+        goto :GET_FOLDER
     )
     echo Exiting...
     exit /b 1
@@ -78,7 +78,7 @@ set /p choice=Select file number to run (1-%i%):
 REM Validate choice is not empty
 if "%choice%"=="" (
     echo Error: Please enter a number.
-    goto GET_CHOICE
+    goto :GET_CHOICE
 )
 
 REM Validate choice is numeric
@@ -89,7 +89,7 @@ for /l %%k in (1,1,%i%) do (
 
 if "%valid%"=="0" (
     echo Error: Please enter a valid number between 1 and %i%.
-    goto GET_CHOICE
+    goto :GET_CHOICE
 )
 
 set "SRC_FILE=!file[%choice%]!"
@@ -164,14 +164,6 @@ echo.
 echo ====================================
 echo RUNNING PROGRAM
 echo ====================================
-
-@REM echo Class directory: %CLASS_DIR%
-@REM pushd "%CLASS_DIR%"
-@REM if errorlevel 1 (
-@REM     echo Error: Cannot access class directory "%CLASS_DIR%"^!
-@REM     exit /b 1
-@REM )
-@REM pause
 
 echo Executing: java %CLASS_NAME% %ARGS%
 echo.
@@ -248,8 +240,6 @@ if exist "%TEST_FILE%" (
 ) else (
     echo No test file found at: %TEST_FILE%
 )
-
-@REM popd
 
 REM 7. Final summary
 echo.
