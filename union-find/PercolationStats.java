@@ -52,7 +52,7 @@ public class PercolationStats {
         mTrials = trials;
         mThresholds = new double[trials];
         for (int i = 0; i < trials; i++) {
-            mThresholds[i] = _performPercolationTrial(n);
+            mThresholds[i] = performPercolationTrial(n);
         }
     }
 
@@ -152,7 +152,7 @@ public class PercolationStats {
      * @param n the size of the grid (n x n)
      * @return the fraction of sites opened when percolation occurred
      */
-    private static double _performPercolationTrial(int n) {
+    private static double performPercolationTrial(int n) {
       Percolation perc = new Percolation(n);
       int[] pickingSiteOrder = StdRandom.permutation(n * n);
       for (int i = 0; i < pickingSiteOrder.length; i++) {

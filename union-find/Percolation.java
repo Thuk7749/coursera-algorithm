@@ -84,12 +84,12 @@ public class Percolation {
     /**
      * Virtual site connected to the top row to simplify percolation checking.
      */
-    private final int mVirtualTopSize;
+    private final int mVirtualTopSite;
 
     /**
      * Virtual site connected to the bottom row to simplify percolation checking.
      */
-    private final int mVirtualBottomSize;
+    private final int mVirtualBottomSite;
 
     /**
      * Constructs a Percolation object for an n-by-n grid, with all sites initially blocked.
@@ -105,8 +105,8 @@ public class Percolation {
         mGridSize = n;
         mIsBlocked = new boolean[n * n];
         mOpenSitesCount = 0;
-        mVirtualBottomSize = n * n;
-        mVirtualTopSize = n * n + 1;
+        mVirtualBottomSite = n * n;
+        mVirtualTopSite = n * n + 1;
         mOpenSites = new WeightedQuickUnionUF(n * n + 2);
 
         // All sites are initially blocked
@@ -125,20 +125,20 @@ public class Percolation {
      * @throws IllegalArgumentException if row or col is out of bounds
      */
     public void open(int row, int col) {
-        _validateIndices(row, col);
+        validateIndices(row, col);
         if (isOpen(row, col)) {
             return; // Site is already open 
         }
 
         // Open the site
-        mIsBlocked[_flattenedIndexOf(row, col)] = false;
+        mIsBlocked[flattenedIndexOf(row, col)] = false;
         mOpenSitesCount++;
 
         // Connect to adjacent open sites
-        _tryConnectSites(row, col, row - 1, col);
-        _tryConnectSites(row, col, row + 1, col);
-        _tryConnectSites(row, col, row, col - 1);
-        _tryConnectSites(row, col, row, col + 1);
+        tryConnectSites(row, col, row - 1, col);
+        tryConnectSites(row, col, row + 1, col);
+        tryConnectSites(row, col, row, col - 1);
+        tryConnectSites(row, col, row, col + 1);
     }
 
     /**
@@ -150,22 +150,29 @@ public class Percolation {
      * @throws IllegalArgumentException if row or col is out of bounds
      */
     public boolean isOpen(int row, int col) {
-        _validateIndices(row, col);
-        return !mIsBlocked[_flattenedIndexOf(row, col)];
+        validateIndices(row, col);
+        return !mIsBlocked[flattenedIndexOf(row, col)];
     }
 
     /**
      * Checks if the site at the specified row and column is full.
-     * A site is considered full if it is open and connected to the virtual top site.
+     * A full site is an open site that can be connected to an open site in the top row
+     * via a chain of neighboring (left, right, up, down) open sites
      *
+     * @implNote Backwash: Once a system percolates,
+     * sites connected to the bottom are indirectly connected to the top through the virtual sites.
+     * @implNote Solution link cause i'm lazy:
+     * https://stackoverflow.com/questions/61396690/how-to-handle-the-backwash-problem-in-percolation-without-creating-an-extra-wuf
+     * 
      * @param row the row index (1-based)
      * @param col the column index (1-based)
      * @return true if the site is full, false otherwise
      * @throws IllegalArgumentException if row or col is out of bounds
      */
     public boolean isFull(int row, int col) {
-        _validateIndices(row, col);
-        return mIsBlocked[_flattenedIndexOf(row, col)];
+        validateIndices(row, col);
+        return isOpen(row, col) && 
+               mOpenSites.find(flattenedIndexOf(row, col)) == mOpenSites.find(mVirtualTopSite);
     }
 
     /**
@@ -184,8 +191,8 @@ public class Percolation {
      * @return true if the system percolates, false otherwise
      */
     public boolean percolates() {
-        int topCanonicalIndex = mOpenSites.find(mVirtualTopSize);
-        int bottomCanonicalIndex = mOpenSites.find(mVirtualBottomSize);
+        int topCanonicalIndex = mOpenSites.find(mVirtualTopSite);
+        int bottomCanonicalIndex = mOpenSites.find(mVirtualBottomSite);
         return topCanonicalIndex == bottomCanonicalIndex;
     }
 
@@ -233,24 +240,24 @@ public class Percolation {
      * @param connectedRow     the row index of the site to connect to (1-based)
      * @param connectedCol     the column index of the site to connect to (1-based)
      */
-    private void _tryConnectSites(int connectingRow, int connectingCol, int connectedRow, int connectedCol) {
-        int connectingIndex = _flattenedIndexOf(connectingRow, connectingCol);
+    private void tryConnectSites(int connectingRow, int connectingCol, int connectedRow, int connectedCol) {
+        int connectingIndex = flattenedIndexOf(connectingRow, connectingCol);
 
         // Connect to virtual top or bottom site if applicable
         if (connectedRow == 0 && connectedCol > 0 && connectedCol <= mGridSize) {
-            mOpenSites.union(connectingIndex, mVirtualTopSize);
+            mOpenSites.union(connectingIndex, mVirtualTopSite);
             return;
         }
         if (connectedRow == mGridSize + 1 && connectedCol > 0 && connectedCol <= mGridSize) {
-            mOpenSites.union(connectingIndex, mVirtualBottomSize);
+            mOpenSites.union(connectingIndex, mVirtualBottomSite);
             return;
         }
         
-        if (!_isValidIndex(connectedRow, connectedCol) || !isOpen(connectedRow, connectedCol)) {
+        if (!isValidIndex(connectedRow, connectedCol) || !isOpen(connectedRow, connectedCol)) {
             return; // Connected site is out of bounds or blocked
         }
 
-        mOpenSites.union(connectingIndex, _flattenedIndexOf(connectedRow, connectedCol));
+        mOpenSites.union(connectingIndex, flattenedIndexOf(connectedRow, connectedCol));
     }
 
     /**
@@ -261,7 +268,7 @@ public class Percolation {
      * @param col the column index (1-based)
      * @throws IllegalArgumentException if the indices are invalid
      */
-    private void _validateIndices(int row, int col) {
+    private void validateIndices(int row, int col) {
         if (row < 1 || row > mGridSize || col < 1 || col > mGridSize) {
             throw new IllegalArgumentException("row and col must be between 1 and " + mGridSize);
         }
@@ -275,7 +282,7 @@ public class Percolation {
      * @param col the column index (1-based)
      * @return true if the indices are valid, false otherwise
      */
-    private boolean _isValidIndex(int row, int col) {
+    private boolean isValidIndex(int row, int col) {
         return row >= 1 && row <= mGridSize && col >= 1 && col <= mGridSize;
     }
 
@@ -287,7 +294,7 @@ public class Percolation {
      * @param col the column index (1-based)
      * @return the flattened index corresponding to the site at (row, col)
      */
-    private int _flattenedIndexOf(int row, int col) {
+    private int flattenedIndexOf(int row, int col) {
         return (row - 1) * mGridSize + (col - 1);
     }
 }
