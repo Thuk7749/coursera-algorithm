@@ -8,6 +8,35 @@ import edu.princeton.cs.algs4.StdRandom;
  */
 public class PercolationStats {
     /**
+     * Z-value for 95% confidence interval.
+     */
+    private static final double CONFIDENCE_95 = 1.96; // Z-value for 95% confidence interval
+    
+    /**
+     * Default value for trials size.
+     * This is used if the user does not specify it in the command line arguments.
+     */
+    private static final int DEFAULT_TRIALS = 100; // Default number of trials if not specified
+    
+    /**
+     * Default value for grid size.
+     * This is used if the user does not specify it in the command line arguments.
+     */
+    private static final int DEFAULT_N = 200; // Default grid size if not specified
+
+    /**
+     * Stores the percolation thresholds for each trial.
+     * Each threshold is the fraction of sites that need to be opened
+     */
+    private final double[] mThresholds; // Store percolation thresholds for trials
+    
+    /**
+     * Number of independent trials performed.
+     * Used to calculate mean, standard deviation, and confidence intervals.
+     */
+    private final int mTrials; // Number of trials performed
+
+    /**
      * Constructs a PercolationStats object that performs trials on an n-by-n grid.
      * It initializes the thresholds for each trial by performing percolation trials.
      *
@@ -15,15 +44,15 @@ public class PercolationStats {
      * @param trials the number of independent trials to perform
      * @throws IllegalArgumentException if n or trials is less than or equal to 0
      */
-    public PercolationStats(int n, int trials) throws IllegalArgumentException {
+    public PercolationStats(int n, int trials) {
         if (n <= 0 || trials <= 0) {
             throw new IllegalArgumentException("n and trials must be greater than 0");
         }
         
-        _trials = trials;
-        _thresholds = new double[trials];
+        mTrials = trials;
+        mThresholds = new double[trials];
         for (int i = 0; i < trials; i++) {
-            _thresholds[i] = _performPercolationTrial(n);
+            mThresholds[i] = _performPercolationTrial(n);
         }
     }
 
@@ -33,7 +62,7 @@ public class PercolationStats {
      * @return the mean of the percolation thresholds
      */
     public double mean() {
-        return StdStats.mean(_thresholds);
+        return StdStats.mean(mThresholds);
     }
 
     /**
@@ -42,10 +71,10 @@ public class PercolationStats {
      * @return the standard deviation of the percolation thresholds
      */
     public double stddev() {
-        if (_trials == 1) {
+        if (mTrials == 1) {
             return Double.NaN; // Standard deviation is undefined for a single trial
         }
-        return StdStats.stddev(_thresholds);
+        return StdStats.stddev(mThresholds);
     }
 
     /**
@@ -54,12 +83,12 @@ public class PercolationStats {
      * @return the low endpoint of the 95% confidence interval
      */
     public double confidenceLo() {
-        if (_trials <= 1) {
+        if (mTrials <= 1) {
             return Double.NaN; // Confidence interval is undefined for a single trial
         }
         double mean = mean();
         double stddev = stddev();
-        return mean - (CONFIDENCE_95 * stddev / Math.sqrt(_trials));
+        return mean - (CONFIDENCE_95 * stddev / Math.sqrt(mTrials));
     }
 
     /**
@@ -68,12 +97,12 @@ public class PercolationStats {
      * @return the high endpoint of the 95% confidence interval
      */
     public double confidenceHi() {
-        if (_trials <= 1) {
+        if (mTrials <= 1) {
             return Double.NaN; // Confidence interval is undefined for a single trial
         }
         double mean = mean();
         double stddev = stddev();
-        return mean + (CONFIDENCE_95 * stddev / Math.sqrt(_trials));
+        return mean + (CONFIDENCE_95 * stddev / Math.sqrt(mTrials));
     }
 
     /**
@@ -136,33 +165,4 @@ public class PercolationStats {
       }
       return -1.0; // This path should not be reached
     }
-
-    /**
-     * Stores the percolation thresholds for each trial.
-     * Each threshold is the fraction of sites that need to be opened
-     */
-    private final double[] _thresholds; // Store percolation thresholds for trials
-    
-    /**
-     * Number of independent trials performed.
-     * Used to calculate mean, standard deviation, and confidence intervals.
-     */
-    private final int _trials; // Number of trials performed
-
-    /**
-     * Z-value for 95% confidence interval.
-     */
-    private static final double CONFIDENCE_95 = 1.96; // Z-value for 95% confidence interval
-    
-    /**
-     * Default value for trials size.
-     * This is used if the user does not specify it in the command line arguments.
-     */
-    private static final int DEFAULT_TRIALS = 100; // Default number of trials if not specified
-    
-    /**
-     * Default value for grid size.
-     * This is used if the user does not specify it in the command line arguments.
-     */
-    private static final int DEFAULT_N = 200; // Default grid size if not specified
 }

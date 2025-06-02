@@ -55,26 +55,63 @@ import edu.princeton.cs.algs4.StdRandom;
  */
 public class Percolation {
     /**
+     * Default grid size if not specified in the command line arguments.
+     */
+    private static final int DEFAULT_GRID_SIZE = 20; // Default grid size if not specified
+
+    /**
+     * The size of the grid (n x n).
+     */
+    private final int mGridSize;
+
+    /**
+     * The grid represented as a 1D array where each index corresponds to a site.
+     * A site is blocked if the value is true, and open if false.
+     */
+    private boolean[] mIsBlocked;
+
+    /**
+     * The count of open sites in the grid.
+     */
+    private int mOpenSitesCount;
+
+    /**
+     * Union-Find data structure to manage connectivity of open sites.
+     * It includes virtual top and bottom sites for efficient percolation checks.
+     */
+    private WeightedQuickUnionUF mOpenSites;
+
+    /**
+     * Virtual site connected to the top row to simplify percolation checking.
+     */
+    private final int mVirtualTopSize;
+
+    /**
+     * Virtual site connected to the bottom row to simplify percolation checking.
+     */
+    private final int mVirtualBottomSize;
+
+    /**
      * Constructs a Percolation object for an n-by-n grid, with all sites initially blocked.
      *
      * @param n the size of the grid (n x n)
      * @throws IllegalArgumentException if n is less than or equal to 0
      */
-    public Percolation(int n) throws IllegalArgumentException {
+    public Percolation(int n) {
         if (n <= 0) {
             throw new IllegalArgumentException("n must be greater than 0");
         }
         // Initialize the grid and other necessary data structures
-        _n = n;
-        _isBlocked = new boolean[n * n];
-        _openSitesCount = 0;
-        _virtualBottomSite = n * n;
-        _virtualTopSite = n * n + 1;
-        _openSites = new WeightedQuickUnionUF(n * n + 2);
+        mGridSize = n;
+        mIsBlocked = new boolean[n * n];
+        mOpenSitesCount = 0;
+        mVirtualBottomSize = n * n;
+        mVirtualTopSize = n * n + 1;
+        mOpenSites = new WeightedQuickUnionUF(n * n + 2);
 
         // All sites are initially blocked
         for (int i = 0; i < n * n; i++) {
-            _isBlocked[i] = true; // true means blocked 
+            mIsBlocked[i] = true; // true means blocked 
         }
     }
 
@@ -87,15 +124,15 @@ public class Percolation {
      * @param col the column index (1-based)
      * @throws IllegalArgumentException if row or col is out of bounds
      */
-    public void open(int row, int col) throws IllegalArgumentException {
+    public void open(int row, int col) {
         _validateIndices(row, col);
         if (isOpen(row, col)) {
             return; // Site is already open 
         }
 
         // Open the site
-        _isBlocked[_flattenedIndexOf(row, col)] = false;
-        _openSitesCount++;
+        mIsBlocked[_flattenedIndexOf(row, col)] = false;
+        mOpenSitesCount++;
 
         // Connect to adjacent open sites
         _tryConnectSites(row, col, row - 1, col);
@@ -112,9 +149,9 @@ public class Percolation {
      * @return true if the site is open, false otherwise
      * @throws IllegalArgumentException if row or col is out of bounds
      */
-    public boolean isOpen(int row, int col) throws IllegalArgumentException {
+    public boolean isOpen(int row, int col) {
         _validateIndices(row, col);
-        return !_isBlocked[_flattenedIndexOf(row, col)];
+        return !mIsBlocked[_flattenedIndexOf(row, col)];
     }
 
     /**
@@ -126,9 +163,9 @@ public class Percolation {
      * @return true if the site is full, false otherwise
      * @throws IllegalArgumentException if row or col is out of bounds
      */
-    public boolean isFull(int row, int col) throws IllegalArgumentException {
+    public boolean isFull(int row, int col) {
         _validateIndices(row, col);
-        return _isBlocked[_flattenedIndexOf(row, col)];
+        return mIsBlocked[_flattenedIndexOf(row, col)];
     }
 
     /**
@@ -137,7 +174,7 @@ public class Percolation {
      * @return the count of open sites
      */
     public int numberOfOpenSites() {
-        return _openSitesCount;
+        return mOpenSitesCount;
     }
 
     /**
@@ -147,8 +184,8 @@ public class Percolation {
      * @return true if the system percolates, false otherwise
      */
     public boolean percolates() {
-        int topCanonicalIndex = _openSites.find(_virtualTopSite);
-        int bottomCanonicalIndex = _openSites.find(_virtualBottomSite);
+        int topCanonicalIndex = mOpenSites.find(mVirtualTopSize);
+        int bottomCanonicalIndex = mOpenSites.find(mVirtualBottomSize);
         return topCanonicalIndex == bottomCanonicalIndex;
     }
 
@@ -178,7 +215,7 @@ public class Percolation {
             perc.open(row, col);
             if (perc.percolates()) {
                 System.out.println("Percolation occurred after opening " + (i + 1) + " sites.");
-                System.out.println("Percolation threshold: " + (double)(i + 1) / (n * n));
+                System.out.println("Percolation threshold: " + (double) (i + 1) / (n * n));
                 break;
             }
         }
@@ -200,12 +237,12 @@ public class Percolation {
         int connectingIndex = _flattenedIndexOf(connectingRow, connectingCol);
 
         // Connect to virtual top or bottom site if applicable
-        if (connectedRow == 0 && connectedCol > 0 && connectedCol <= _n) {
-            _openSites.union(connectingIndex, _virtualTopSite);
+        if (connectedRow == 0 && connectedCol > 0 && connectedCol <= mGridSize) {
+            mOpenSites.union(connectingIndex, mVirtualTopSize);
             return;
         }
-        if (connectedRow == _n + 1 && connectedCol > 0 && connectedCol <= _n) {
-            _openSites.union(connectingIndex, _virtualBottomSite);
+        if (connectedRow == mGridSize + 1 && connectedCol > 0 && connectedCol <= mGridSize) {
+            mOpenSites.union(connectingIndex, mVirtualBottomSize);
             return;
         }
         
@@ -213,7 +250,7 @@ public class Percolation {
             return; // Connected site is out of bounds or blocked
         }
 
-        _openSites.union(connectingIndex, _flattenedIndexOf(connectedRow, connectedCol));
+        mOpenSites.union(connectingIndex, _flattenedIndexOf(connectedRow, connectedCol));
     }
 
     /**
@@ -224,9 +261,9 @@ public class Percolation {
      * @param col the column index (1-based)
      * @throws IllegalArgumentException if the indices are invalid
      */
-    private void _validateIndices(int row, int col) throws IllegalArgumentException {
-        if (row < 1 || row > _n || col < 1 || col > _n) {
-            throw new IllegalArgumentException("row and col must be between 1 and " + _n);
+    private void _validateIndices(int row, int col) {
+        if (row < 1 || row > mGridSize || col < 1 || col > mGridSize) {
+            throw new IllegalArgumentException("row and col must be between 1 and " + mGridSize);
         }
     }
 
@@ -239,7 +276,7 @@ public class Percolation {
      * @return true if the indices are valid, false otherwise
      */
     private boolean _isValidIndex(int row, int col) {
-        return row >= 1 && row <= _n && col >= 1 && col <= _n;
+        return row >= 1 && row <= mGridSize && col >= 1 && col <= mGridSize;
     }
 
     /**
@@ -251,43 +288,6 @@ public class Percolation {
      * @return the flattened index corresponding to the site at (row, col)
      */
     private int _flattenedIndexOf(int row, int col) {
-        return (row - 1) * _n + (col - 1);
+        return (row - 1) * mGridSize + (col - 1);
     }
-
-    /**
-     * The size of the grid (n x n).
-     */
-    private final int _n;
-
-    /**
-     * The grid represented as a 1D array where each index corresponds to a site.
-     * A site is blocked if the value is true, and open if false.
-     */
-    private boolean[] _isBlocked;
-
-    /**
-     * The count of open sites in the grid.
-     */
-    private int _openSitesCount;
-
-    /**
-     * Union-Find data structure to manage connectivity of open sites.
-     * It includes virtual top and bottom sites for efficient percolation checks.
-     */
-    private WeightedQuickUnionUF _openSites;
-
-    /**
-     * Virtual site connected to the top row to simplify percolation checking.
-     */
-    private final int _virtualTopSite;
-
-    /**
-     * Virtual site connected to the bottom row to simplify percolation checking.
-     */
-    private final int _virtualBottomSite;
-
-    /**
-     * Default grid size if not specified in the command line arguments.
-     */
-    private static final int DEFAULT_GRID_SIZE = 20; // Default grid size if not specified
 }
