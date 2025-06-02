@@ -128,9 +128,9 @@ if not exist "%LIB_DIR%" (
 REM Compile with detailed error reporting
 echo Compiling %SRC_FILE%...
 if "%CLASSPATH_LIBS%"=="" (
-    javac -d "%CLASS_DIR%" "%JAVA_FOLDER%\%SRC_FILE%" 2>&1
+    javac -d "%CLASS_DIR%" -cp "%CLASS_DIR%" "%JAVA_FOLDER%\%SRC_FILE%" 2>&1
 ) else (
-    javac -d "%CLASS_DIR%" -cp "%CLASSPATH_LIBS%" "%JAVA_FOLDER%\%SRC_FILE%" 2>&1
+    javac -d "%CLASS_DIR%" -cp "%CLASS_DIR%;%CLASSPATH_LIBS%" "%JAVA_FOLDER%\%SRC_FILE%" 2>&1
 )
 
 if errorlevel 1 (
