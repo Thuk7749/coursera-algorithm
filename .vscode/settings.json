@@ -1,3 +1,20 @@
 {
-  "java.project.referencedLibraries": ["lib/*.jar"]
+  "java.project.referencedLibraries": ["part-*/lib/*.jar"],
+  "java.project.sourcePaths": [
+    "part-one/00_topic-template",
+    "part-one/00_topic-template/test",
+    "part-one/01_hello-world",
+    "part-one/01_hello-world/test",
+    "part-one/02_union-find",
+    "part-one/02_union-find/test",
+    "part-one/03_algorithm-analysis",
+    "part-one/03_algorithm-analysis/test",
+    "part-one/04_stack-and-queue",
+    "part-one/04_stack-and-queue/test",
+    "part-one/05_elementary-sorts",
+    "part-one/05_elementary-sorts/test",
+    "part-one/06_mergesort",
+    "part-one/06_mergesort/test"
+  ],
+  "java.project.outputPath": "class"
 }
