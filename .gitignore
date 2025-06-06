@@ -1,2 +1,3 @@
 *.class
-
+*.folder_list.tmp
+*.last_folder.txt

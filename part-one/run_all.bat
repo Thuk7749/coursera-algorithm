@@ -7,11 +7,87 @@ REM Includes comprehensive error handling and input validation
 echo Java Project Compiler and Runner
 echo ====================================
 
-REM 1. Ask for the folder containing the .java files with validation
-:GET_FOLDER
+REM 1. List all folders and let user select by number, with last folder as default
+set "LAST_FOLDER_FILE=.last_folder.txt"
 set "JAVA_FOLDER="
-set /p JAVA_FOLDER="Enter the folder containing the .java files (default: hello-world): "
-if "%JAVA_FOLDER%"=="" set "JAVA_FOLDER=hello-world"
+set "LIB_FOLDER=lib"
+set "FOLDER_COUNT=0"
+set "FOLDER_LIST_FILE=.folder_list.tmp"
+if exist "%FOLDER_LIST_FILE%" del "%FOLDER_LIST_FILE%"
+
+REM Read last folder if exists
+set "LAST_FOLDER=01_hello-world"
+if exist "%LAST_FOLDER_FILE%" (
+    for /f "usebackq delims=" %%i in ("%LAST_FOLDER_FILE%") do set "LAST_FOLDER=%%i"
+)
+
+:LIST_FOLDERS
+set i=0
+for /d %%d in (*) do (
+    REM Skip the lib folder
+    if /i not "%%d"=="%LIB_FOLDER%" (
+        set /a i+=1
+        echo %%d>>"%FOLDER_LIST_FILE%"
+    )
+)
+set FOLDER_COUNT=%i%
+
+if %FOLDER_COUNT%==0 (
+    echo Error: No folders found in the current directory!
+    exit /b 1
+)
+
+echo.
+echo Available folders:
+echo ========================
+setlocal enabledelayedexpansion
+set j=0
+for /f "usebackq delims=" %%a in ("%FOLDER_LIST_FILE%") do (
+    set "folder[!j!]=%%a"
+    echo !j!. %%a
+    set /a j+=1
+)
+endlocal
+echo.
+echo Press Enter to use last folder: %LAST_FOLDER%
+
+:GET_FOLDER_CHOICE
+set "choice="
+set /p choice=Select folder number (0-%FOLDER_COUNT%): 
+if "%choice%"=="" set "choice=LAST"
+
+if /i "%choice%"=="LAST" (
+    set "JAVA_FOLDER=%LAST_FOLDER%"
+) else (
+    set "valid=0"
+    set "max_choice=%FOLDER_COUNT%"
+    set /a max_choice-=1
+    for /l %%k in (0,1,%max_choice%) do (
+        if "%choice%"=="%%k" set "valid=1"
+    )
+    if "%valid%"=="0" (
+        echo Error: Please enter a valid number between 0 and %max_choice% or press Enter for default.
+        goto :GET_FOLDER_CHOICE
+    )
+      REM Use a counter to get the correct line from the file
+    setlocal enabledelayedexpansion
+    set "line_counter=-1"
+    for /f "usebackq delims=" %%a in ("%FOLDER_LIST_FILE%") do (
+        set /a line_counter+=1
+        if !line_counter! EQU %choice% (
+            set "selected_folder=%%a"
+            goto :FOUND_FOLDER
+        )
+    )
+    :FOUND_FOLDER
+    endlocal & set "JAVA_FOLDER=%selected_folder%"
+)
+
+REM Save selected folder for next time
+if not "%JAVA_FOLDER%"=="" (
+    >"%LAST_FOLDER_FILE%" echo %JAVA_FOLDER%
+)
+if exist "%FOLDER_LIST_FILE%" del "%FOLDER_LIST_FILE%"
 
 REM Sanitize folder path - remove potential dangerous characters
 set "JAVA_FOLDER=%JAVA_FOLDER:"=%"
@@ -22,7 +98,7 @@ set "JAVA_FOLDER=%JAVA_FOLDER:<=%"
 
 if "%JAVA_FOLDER%"=="" (
     echo "Error: Folder name cannot be empty."
-    goto :GET_FOLDER
+    goto :LIST_FOLDERS
 )
 
 REM Check if folder exists and is accessible
@@ -30,7 +106,7 @@ if not exist "%JAVA_FOLDER%" (
     echo ====================================
     echo Error: Folder "%JAVA_FOLDER%" does not exist.
     set /p RETRY="Try again? (y/n)": 
-    if /i "!RETRY!"=="y" goto :GET_FOLDER
+    if /i "%RETRY%"=="y" goto :LIST_FOLDERS
     echo Exiting...
     exit /b 1
 )
@@ -40,9 +116,9 @@ pushd "%JAVA_FOLDER%" >nul 2>&1
 if errorlevel 1 (
     echo Error: "%JAVA_FOLDER%" is not a valid directory or access denied.
     set /p RETRY="Try again? (y/n)": 
-    if /i "!RETRY!"=="y" (
+    if /i "%RETRY%"=="y" (
         popd >nul 2>&1
-        goto :GET_FOLDER
+        goto :LIST_FOLDERS
     )
     echo Exiting...
     exit /b 1
